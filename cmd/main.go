@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -12,13 +13,16 @@ import (
 var ginLambda *ginadapter.GinLambda
 
 func main() {
+	isLambdaEnable := os.Getenv("LAMBDA_ENABLED")
 	router := gin.Default()
 	router.GET("/users", GetUsers)
 	router.GET("/roles", GetRoles)
-	router.Run()
-
-	ginLambda = ginadapter.New(router)
-	lambda.Start(Handler)
+	if isLambdaEnable == "false" {
+		router.Run()
+	} else {
+		ginLambda = ginadapter.New(router)
+		lambda.Start(Handler)
+	}
 }
 
 func Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
